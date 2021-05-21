@@ -98,7 +98,7 @@ time_end <- as.POSIXct("2015-04-16", TZ = "UTC")
 wildschwein_subset <- wildschwein %>% 
   filter(
     DatetimeUTC >= time_start & DatetimeUTC <= time_end,
-    TierName == "Sabi" | TierName== "Rosa")
+    TierName == "Sabi" | TierName== "Rosa"
     )
 
 ```
