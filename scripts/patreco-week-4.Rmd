@@ -59,6 +59,10 @@ Creating a function for the Euclidian distance calculation. Two seperate functio
 
 ```{r euclidian functions}
 
+euclid_dist <- function(e1, e2, n1, n2) {
+  sqrt((e1 - e2)^2 + (n1 - n2)^2)
+}
+
 euclid_lead <- function (df, interval = 1) {
   sqrt((df$E - lead(df$E, interval))^2 + 
        (df$N - lead(df$N, interval))^2)
@@ -73,7 +77,7 @@ euclid_lag <- function (df, interval = 1) {
 
 Testing the function with the wildboar data.
 
-```{r testing function}
+```{r testing function, eval=FALSE, include=TRUE}
 
 wildschwein$steplength1 <- euclid_lead(wildschwein)
 wildschwein$steplength2 <- euclid_lead(wildschwein, 2)
@@ -82,20 +86,87 @@ wildschwein$steplength2 <- euclid_lead(wildschwein, 2)
 
 ## Task 2: Preparing analysis
 
-We subset the wildboar data to simplify the analysis. Wen only use the individuals *Rosa* and *Sabi* for the timespan *01.04.2015* to *15.05.2015*.
+Subset the wildboar data to simplify the analysis. Only use the individuals *Rosa* and *Sabi* for the timespan *01.04.2015* to *15.05.2015*.
 
 ```{r subsetting data, message=FALSE, warning=FALSE}
 
 str(wildschwein) #Datetime is already formated correctly
 
-time_start <- as.Date("2015-04-01") # UTC is the default timzone
-time_end <- as.Date("2015-04-16")
+time_start <- as.POSIXct("2015-04-01", tz = "UTC") # UTC is the default timzone
+time_end <- as.POSIXct("2015-04-16", TZ = "UTC")
 
 wildschwein_subset <- wildschwein %>% 
   filter(
     DatetimeUTC >= time_start & DatetimeUTC <= time_end,
-    TierName == c("Sabi", "Rosa")
+    TierName == "Sabi" | TierName== "Rosa")
     )
+
+```
+
+## Taks 3: Create Join Key
+
+Round the time stamps in order to compare Rosa and Sabis' locations and to be able to apply a join. Round the minutes of `DatetimeUTC` to a multiple of 15 and put the values in a new column by using `round_date()`
+
+```{r round datetime}
+
+wildschwein_subset$time_rounded <- wildschwein_subset$DatetimeUTC %>% 
+  round_date("15 minutes")
+
+head(wildschwein_subset)
+
+```
+
+## Task 4: Measuring distance at concurrent locations
+
+Splitting the subset data into one df per animal.
+
+```{r split dataset}
+
+wildschwein_split <- wildschwein_subset %>% 
+  group_split(TierName) %>% 
+  setNames(c("Rosa", "Sabi")
+  )
+
+list2env(wildschwein_split, envir = .GlobalEnv)
+
+
+```
+
+Rejoining the dataframes by `time_rounded` using `inner_join` because only data points with temporal closeness are interesting here.
+
+```{r inner join}
+
+
+wildschwein_join <- inner_join(
+  Sabi, Rosa, by = "time_rounded", suffix = c("_sabi", "_rosa")
+  )
+
+
+```
+
+Calculating the Euclidian distance using the definied function `euclid_dist`
+
+```{r calculating euclidian distance}
+wildschwein_join <- wildschwein_join %>%  
+  mutate(
+    distance = euclid_dist(.$E_sabi, .$E_rosa, .$N_sabi, .$N_rosa)
+    )
+```
+
+Or manually:
+
+```{r calculating euclidian distance (no fn), eval=FALSE, include=TRUE}
+wildschwein_join <- wildschwein_join %>%
+    mutate(
+    distance = sqrt((E_sabi - E_rosa)^2 + (N_sabi - N_rosa)^2)
+    )
+```
+
+Calculating spatial closeness using a distance threshold.
+
+```{r caluclating meet}
+
+wildschwein_join$meet <- ifelse(wildschwein_join$distance <= 100, TRUE, FALSE)
 
 ```
 
