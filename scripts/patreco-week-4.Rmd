@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Libraries
 
-```{r libraries, message = FALSE, highlight = TRUE}
+```{r libraries, message=FALSE, warning=FALSE}
 
 library(readr)        
 library(dplyr)        
@@ -27,16 +27,18 @@ library(sf)
 
 Trying out some dummy functions. Normally, all the functions would go here but the actual functions for this exercise are to be found in Task 1.
 
-```{r dummy functions}
+```{r dummy functions, message=FALSE}
 
+# simple funtion to demonstrate its structure
 testfun <- function() {print("this function does nothing")}
 testfun()
 
+# calculcating age based on birthday
 my_age <- function(birthday, units = "days") {
   difftime(Sys.time(), birthday, units = units)
 }
 
-my_age("1988-10-25", "weeks")
+my_age("1980-01-01", "weeks")
 
 
 
@@ -44,29 +46,27 @@ my_age("1988-10-25", "weeks")
 
 ## Data Import
 
-```{r data import, message=FALSE, warning=FALSE}
-
-getwd()
+```{r data import, message=FALSE, warning=FALSE, include=TRUE}
 
 wildschwein <- read_delim("data/wildschwein_BE_2056.csv", ",")
 
 
 ```
 
-## Task 1
+## Task 1: Writing a function
 
-Creating a function for our Euclidian distance calculation. Two seperate functions. One for lead and one for lag. The default interval is set to 1 but can be changed, as we did in exercise 3 to calculate different steplengths.
+Creating a function for the Euclidian distance calculation. Two seperate functions. One for lead and one for lag. The default interval is set to 1 but can be changed, as we did in exercise 3 to calculate different steplengths.
 
 ```{r euclidian functions}
 
-euclid_lead <- function(df, interval = 1) {
+euclid_lead <- function (df, interval = 1) {
   sqrt((df$E - lead(df$E, interval))^2 + 
        (df$N - lead(df$N, interval))^2)
 }
 
-euclid_lag <- function(df, interval = 1) {
+euclid_lag <- function (df, interval = 1) {
   sqrt((lag(df$E, interval) - df$E)^2 + 
-       (lag(df$N, interval) - df$N)^2))
+       (lag(df$N, interval) - df$N)^2)
 }
 
 ```
@@ -79,3 +79,23 @@ wildschwein$steplength1 <- euclid_lead(wildschwein)
 wildschwein$steplength2 <- euclid_lead(wildschwein, 2)
 
 ```
+
+## Task 2: Preparing analysis
+
+We subset the wildboar data to simplify the analysis. Wen only use the individuals *Rosa* and *Sabi* for the timespan *01.04.2015* to *15.05.2015*.
+
+```{r subsetting data, message=FALSE, warning=FALSE}
+
+str(wildschwein) #Datetime is already formated correctly
+
+time_start <- as.Date("2015-04-01") # UTC is the default timzone
+time_end <- as.Date("2015-04-16")
+
+wildschwein_subset <- wildschwein %>% 
+  filter(
+    DatetimeUTC >= time_start & DatetimeUTC <= time_end,
+    TierName == c("Sabi", "Rosa")
+    )
+
+```
+
