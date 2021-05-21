@@ -1,0 +1,81 @@
+---
+title: "patreco-week-4"
+author: "wildhtob"
+date: "7 5 2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Exercises Week 4
+
+## Libraries
+
+```{r libraries, message = FALSE, highlight = TRUE}
+
+library(readr)        
+library(dplyr)        
+library(ggplot2)      
+library(lubridate)
+library(sf) 
+
+```
+
+## Functions
+
+Trying out some dummy functions. Normally, all the functions would go here but the actual functions for this exercise are to be found in Task 1.
+
+```{r dummy functions}
+
+testfun <- function() {print("this function does nothing")}
+testfun()
+
+my_age <- function(birthday, units = "days") {
+  difftime(Sys.time(), birthday, units = units)
+}
+
+my_age("1988-10-25", "weeks")
+
+
+
+```
+
+## Data Import
+
+```{r data import, message=FALSE, warning=FALSE}
+
+getwd()
+
+wildschwein <- read_delim("data/wildschwein_BE_2056.csv", ",")
+
+
+```
+
+## Task 1
+
+Creating a function for our Euclidian distance calculation. Two seperate functions. One for lead and one for lag. The default interval is set to 1 but can be changed, as we did in exercise 3 to calculate different steplengths.
+
+```{r euclidian functions}
+
+euclid_lead <- function(df, interval = 1) {
+  sqrt((df$E - lead(df$E, interval))^2 + 
+       (df$N - lead(df$N, interval))^2)
+}
+
+euclid_lag <- function(df, interval = 1) {
+  sqrt((lag(df$E, interval) - df$E)^2 + 
+       (lag(df$N, interval) - df$N)^2))
+}
+
+```
+
+Testing the function with the wildboar data.
+
+```{r testing function}
+
+wildschwein$steplength1 <- euclid_lead(wildschwein)
+wildschwein$steplength2 <- euclid_lead(wildschwein, 2)
+
+```
