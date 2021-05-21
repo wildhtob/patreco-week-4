@@ -19,7 +19,7 @@ library(readr)
 library(dplyr)        
 library(ggplot2)      
 library(lubridate)
-library(sf) 
+library(tidyr) 
 
 ```
 
@@ -172,22 +172,23 @@ wildschwein_join$meet <- ifelse(wildschwein_join$distance <= 100, TRUE, FALSE)
 
 ## Task 5: Visualise data
 
-```{r ggplot task 5}
+Visualising the regular locations and the meetings between the two individuals.
 
-ggplot(filter(wildschwein_join, meet == TRUE)) +
-  geom_point(data = wildschwein_subset, aes(E, N, colour = TierName), alpha = 0.5) +
-  geom_point(aes(E_rosa, N_rosa),
-    shape = 21, colour = "black",
-    fill = "#F8766D", stroke = 1, size = 2, alpha = 1
+Note: The colours for the `meet` parameter have to go into `aes()` in order to show up un the legend. Additional parameters such as `alpha` and `stroke` can be added outside of `aes()` as usual.
+
+```{r ggplot task 5, warning=FALSE}
+
+ggplot(filter(wildschwein_join, meet == TRUE), aes(colour = TierName)) +
+  geom_point(data = wildschwein_subset, aes(E, N), alpha = 0.5) +
+  geom_point(aes(E_rosa, N_rosa, fill = "Rosa"),
+    shape = 21, colour = "black", stroke = 1, size = 2, alpha = 1
   ) +
-  geom_point(aes(E_sabi, N_sabi),
-    shape = 21, colour = "black",
-    fill = "#00BFC4", stroke = 1, size = 2, alpha = 1
+  geom_point(aes(E_sabi, N_sabi, fill = "Sabi"),
+    shape = 21, colour = "black", stroke = 1, size = 2, alpha = 1
   ) +
   xlim(2570000, 2571000) +
-  ylim(1204500, 1205500)
+  ylim(1204500, 1205500) +
+  labs(fill = "Meets", colour = "Regular Locations")
   
-# The legend is missing the meeting points. To be resolved.
 
 ```
-
